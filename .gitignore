@@ -45,9 +45,10 @@ server/data/
 .env.*
 !.env.example
 
-# ---------- OS / editor ----------
+# ---------- OS / editor / tooling ----------
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
+.claude/
 *.log

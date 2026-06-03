@@ -1,0 +1,20 @@
+{
+  "name": "offline-face-sync-server",
+  "version": "1.0.0",
+  "description": "Offline -> cloud sync backend for the NHAI offline facial-recognition system",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "seed": "node seed.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

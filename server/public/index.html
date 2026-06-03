@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NHAI · Attendance Sync Dashboard</title>
+  <style>
+    :root { --bg:#0b1020; --card:#151b2e; --line:#243049; --txt:#e8edf7; --mut:#8a97b3;
+            --grn:#3ad29f; --red:#ff6b6b; --acc:#5b8cff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--txt);
+           font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
+    header { padding:22px 28px; border-bottom:1px solid var(--line); display:flex;
+             align-items:center; justify-content:space-between; }
+    h1 { font-size:18px; margin:0; font-weight:650; letter-spacing:.2px; }
+    h1 small { color:var(--mut); font-weight:400; }
+    .live { display:flex; align-items:center; gap:8px; color:var(--mut); font-size:13px; }
+    .dot { width:9px; height:9px; border-radius:50%; background:var(--grn);
+           box-shadow:0 0 0 0 rgba(58,210,159,.7); animation:p 1.8s infinite; }
+    @keyframes p { 0%{box-shadow:0 0 0 0 rgba(58,210,159,.6)} 70%{box-shadow:0 0 0 9px rgba(58,210,159,0)} }
+    .wrap { padding:24px 28px; max-width:1100px; margin:0 auto; }
+    .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; }
+    .card .k { color:var(--mut); font-size:12px; text-transform:uppercase; letter-spacing:.6px; }
+    .card .v { font-size:30px; font-weight:700; margin-top:6px; }
+    table { width:100%; border-collapse:collapse; background:var(--card);
+            border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+    th,td { text-align:left; padding:12px 16px; font-size:14px; border-bottom:1px solid var(--line); }
+    th { color:var(--mut); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+    tr:last-child td { border-bottom:none; }
+    .badge { padding:3px 9px; border-radius:999px; font-size:12px; font-weight:600; }
+    .ok { background:rgba(58,210,159,.15); color:var(--grn); }
+    .no { background:rgba(255,107,107,.15); color:var(--red); }
+    .mut { color:var(--mut); }
+    .empty { text-align:center; color:var(--mut); padding:40px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛡️ Attendance Sync <small>· NHAI Offline Facial Recognition</small></h1>
+    <div class="live"><span class="dot"></span> live · auto-refresh 3s</div>
+  </header>
+  <div class="wrap">
+    <div class="cards">
+      <div class="card"><div class="k">Enrolled users</div><div class="v" id="s-users">–</div></div>
+      <div class="card"><div class="k">Total attendance</div><div class="v" id="s-total">–</div></div>
+      <div class="card"><div class="k">Liveness verified</div><div class="v" id="s-live">–</div></div>
+      <div class="card"><div class="k">Last 24h</div><div class="v" id="s-24h">–</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Name</th><th>Time</th><th>Liveness</th><th>Challenge</th><th>Score</th><th>Device</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="6" class="empty">Waiting for synced records…</td></tr></tbody>
+    </table>
+  </div>
+  <script>
+    const fmt = (t) => new Date(t).toLocaleString();
+    async function refresh() {
+      try {
+        const [s, a] = await Promise.all([
+          fetch('/api/stats').then(r => r.json()),
+          fetch('/api/attendance?limit=100').then(r => r.json()),
+        ]);
+        if (s.ok) {
+          document.getElementById('s-users').textContent = s.stats.users;
+          document.getElementById('s-total').textContent = s.stats.attendance_total;
+          document.getElementById('s-live').textContent = s.stats.attendance_live;
+          document.getElementById('s-24h').textContent = s.stats.attendance_24h;
+        }
+        const rows = document.getElementById('rows');
+        if (a.ok && a.attendance.length) {
+          rows.innerHTML = a.attendance.map(r => `
+            <tr>
+              <td>${r.name ?? '<span class="mut">unknown</span>'}</td>
+              <td class="mut">${fmt(r.timestamp)}</td>
+              <td><span class="badge ${r.liveness_passed ? 'ok' : 'no'}">${r.liveness_passed ? 'LIVE ✓' : 'spoof ✗'}</span></td>
+              <td class="mut">${r.challenge ?? '–'}</td>
+              <td class="mut">${r.score != null ? Number(r.score).toFixed(3) : '–'}</td>
+              <td class="mut">${r.device_id ?? '–'}</td>
+            </tr>`).join('');
+        }
+      } catch (e) { /* server not reachable yet */ }
+    }
+    refresh();
+    setInterval(refresh, 3000);
+  </script>
+</body>
+</html>
