@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Image, Text } from 'react-native';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -14,15 +14,25 @@ import { getDb } from '../src/db/database';
 import { colors } from '../src/theme/colors';
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  // Fonts are a *progressive enhancement* — never block the whole app on them.
+  const [fontsLoaded, fontError] = useFonts({
     Archivo_400Regular, Archivo_500Medium, Archivo_600SemiBold,
     Archivo_700Bold, Archivo_800ExtraBold, Archivo_900Black,
     SpaceMono_400Regular, SpaceMono_700Bold,
   });
+  const [timedOut, setTimedOut] = useState(false);
 
-  useEffect(() => { getDb(); }, []);
+  useEffect(() => {
+    getDb();
+    // safety net: if font loading ever hangs, start the app anyway (system
+    // fallback). When fonts do resolve, the tree re-renders and they apply.
+    const t = setTimeout(() => setTimedOut(true), 1500);
+    return () => clearTimeout(t);
+  }, []);
 
-  if (!fontsLoaded) {
+  const ready = fontsLoaded || !!fontError || timedOut;
+
+  if (!ready) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
         <Image source={require('../assets/adaptive-icon.png')} style={{ width: 110, height: 110 }} />
