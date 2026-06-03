@@ -7,10 +7,11 @@
 **NHAI Hackathon 2025** — *Develop a Secure Offline Facial Recognition & Liveness Detection System for Remote Locations*
 
 [![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-blue)](#)
-[![Framework](https://img.shields.io/badge/React%20Native-Expo-000020)](#)
-[![Models](https://img.shields.io/badge/AI%20models-~5%20MB%20TFLite-success)](#)
+[![Framework](https://img.shields.io/badge/React%20Native-Expo%20SDK%2052-000020)](#)
+[![Model](https://img.shields.io/badge/MobileFaceNet-4.99%20MB%20TFLite-success)](#)
 [![Offline](https://img.shields.io/badge/works-100%25%20offline-brightgreen)](#)
-[![Speed](https://img.shields.io/badge/auth-%3C1%20second-orange)](#)
+[![Accuracy](https://img.shields.io/badge/LFW%20accuracy-98.3%25-success)](#)
+[![Speed](https://img.shields.io/badge/recognition-13%20ms-orange)](#)
 
 </div>
 
@@ -18,35 +19,101 @@
 
 ## The Challenge
 
-Build an AI system that can **recognize faces offline**, **detect fake attendance** using liveness checks, run on **normal mid-range phones (3 GB RAM)** in **zero-network locations**, using **lightweight (~20 MB) AI models**, achieving **>95% accuracy** — all in **under 1 second**.
+Build an AI system that **recognizes faces offline**, **detects fake attendance** via liveness checks, runs on **mid-range phones (3 GB RAM)** in **zero-network locations**, with **lightweight (~20 MB) models**, **>95% accuracy**, in **under 1 second** — and syncs to the cloud when a network returns.
 
-## What This Project Delivers
+## ✅ Every requirement, and how it's met
 
-| ✅ Requirement | How we meet it |
-| --- | --- |
-| Recognize faces **offline** | On-device MobileFaceNet TFLite embeddings + local vector match — zero network |
-| Detect **fake attendance** | Active liveness: blink / smile / head-turn challenge–response (a photo can't comply) |
-| Run on **normal phones** | TFLite with NNAPI/GPU delegate; ~5 MB model footprint |
-| Work in **remote / no-network** | Fully offline-first; results queued and synced when connectivity returns |
-| Authenticate in **< 1 second** | Detect → embed → match ≈ 50–150 ms on mid-range hardware |
-| **Lightweight** models | MobileFaceNet ≈ 5 MB (well under the 20 MB budget) |
-| **> 95%** accuracy | MobileFaceNet (ArcFace loss) ≈ 99% on LFW — benchmarked in `/poc` |
-| **React Native**, Android & iOS | Expo (prebuild) app with native frame-processor ML pipeline |
-| **Offline → cloud sync** | Local SQLite + sync queue → self-hosted Node + SQLite server |
+| Requirement | How we meet it | Evidence |
+| --- | --- | --- |
+| Recognize faces **offline** | On-device MobileFaceNet embeddings + local cosine match — zero network | runs in a VisionCamera frame processor |
+| Detect **fake attendance** | Active liveness: random **blink / smile / head-turn** challenge–response | a photo/screen can't comply |
+| **Lightweight** models | MobileFaceNet TFLite | **4.99 MB** (≪ 20 MB budget) |
+| **> 95%** accuracy | MobileFaceNet (ArcFace), benchmarked on LFW | **98.3%** (98.7% best), ROC-AUC **0.9916** |
+| Authenticate in **< 1 second** | detect → align → embed → match | **13 ms** on laptop CPU (≈76× margin) |
+| **Mid-range phones / 3 GB RAM** | TFLite + NNAPI/GPU delegate; ~5 MB resident | Hermes engine, old-arch RN |
+| **Remote / no-network** | offline-first SQLite + sync queue | airplane-mode proof |
+| **React Native**, Android & iOS | Expo (prebuild) app, native frame-processor pipeline | `mobile/` |
+| **Offline → cloud sync** | local queue flushed to a self-hosted server when online | `server/` + live dashboard |
 
-## Repository Layout
+> Accuracy, latency and model-size numbers are **measured** by `poc/benchmark.py` on the standard LFW
+> verification protocol and saved to [`docs/benchmarks/metrics.json`](docs/benchmarks/metrics.json) — not estimated.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Camera frame<br/>VisionCamera frame processor] --> B[MLKit Face Detector<br/>bounds + eye/smile/yaw]
+    B --> C{Liveness FSM<br/>blink / smile / turn}
+    C -- "fail: photo or screen" --> X[Rejected ✗]
+    C -- "pass: live human" --> D[Crop + resize to 112×112<br/>vision-camera-resize-plugin]
+    D --> E[MobileFaceNet .tflite<br/>fast-tflite · 192-d embedding]
+    E --> F[Cosine match vs gallery<br/>expo-sqlite]
+    F --> G[Attendance saved locally]
+    G -- "when online" --> H[(Node + SQLite<br/>cloud sync server)]
+    H --> I[Live dashboard]
+```
+
+All boxes from *frame* to *attendance saved* run **on the phone, offline**. Only the final hop needs a network — and it's queued, so it happens whenever connectivity returns.
+
+## Benchmark results (measured)
+
+<div align="center">
+<img src="docs/benchmarks/roc_curve.png" width="46%" alt="ROC curve, AUC 0.9916"/>
+<img src="docs/benchmarks/score_distribution.png" width="46%" alt="genuine vs impostor score distribution"/>
+</div>
+
+| Metric | Result | Target |
+| --- | --- | --- |
+| Verification accuracy (LFW, 1000 pairs) | **98.7%** best · **98.3%** @0.45 | > 95% |
+| ROC-AUC | **0.9916** | — |
+| Face-detection rate | **99.85%** | — |
+| Recognition latency (CPU) | **13.2 ms** (detect 8 + embed 4.7) | < 1000 ms |
+| Model size | **4.99 MB** | ~20 MB |
+
+Reproduce: `cd poc && python benchmark.py --pairs 1000`.
+
+## The three components
+
+| Folder | What it is | Run |
+| --- | --- | --- |
+| [`mobile/`](mobile/) | **Expo React Native app** — the on-device product (Android & iOS) | `cd mobile && npm i && npx expo run:android` |
+| [`poc/`](poc/) | **Python reference** — same model, runnable proof + benchmark + webcam demo | `cd poc && pip install -r requirements.txt && python benchmark.py` |
+| [`server/`](server/) | **Node + SQLite** offline→cloud sync backend + live dashboard | `cd server && npm i && npm start` |
+
+Each component has its own README with detailed setup. See [`mobile/README.md`](mobile/README.md) for the device runbook.
+
+## How the anti-spoofing works
+
+The most common attendance fraud is holding up a **photo** or **video** of someone else. We defeat it with **active liveness**: before recognition, the app issues a **randomly chosen** challenge —
+
+> *"Please blink"* · *"Please smile"* · *"Turn your head"*
+
+— and verifies completion from MLKit's `leftEyeOpenProbability`, `smilingProbability`, and head-yaw signals. A static photo can't blink on demand, a pre-recorded video won't match the *random* prompt, and only a real, present human passes. Recognition only runs **after** liveness passes. (A passive texture-based anti-spoof model can be added as a second layer — see `docs/architecture.md`.)
+
+## Tech stack
+
+**Mobile:** Expo SDK 52 · React Native 0.76 · `react-native-vision-camera` 4.7 · `react-native-fast-tflite` 1.6 · `vision-camera-resize-plugin` · `react-native-vision-camera-face-detector` (MLKit) · `expo-sqlite` · `expo-router`.
+**Model:** MobileFaceNet (ArcFace loss), 112×112×3 → 192-d, TFLite.
+**POC:** Python · MediaPipe Tasks FaceLandmarker · OpenCV · LiteRT (TFLite) · scikit-learn.
+**Server:** Node · Express · better-sqlite3.
+
+## Repository structure
 
 ```
-mobile/   →  Expo React Native app  (the on-device product)
-poc/      →  Python reference implementation + benchmarks (runnable proof)
-server/   →  Node + SQLite offline→cloud sync backend
-docs/     →  Architecture, demo script, benchmark results, screenshots
+mobile/   Expo RN app   — app/(tabs) screens + src/{camera,liveness,ml,db,sync,theme}
+poc/      Python ref     — pipeline/ + benchmark.py + recognize.py (webcam demos)
+server/   Sync backend   — Express + SQLite + live dashboard
+docs/     architecture · demo script · benchmarks (metrics + plots)
 ```
 
-> 📋 Full architecture, benchmark numbers, and run instructions are being added as the build progresses. See [`docs/`](docs/).
+## Validation status
+
+- ✅ **POC** — runs and is benchmarked end-to-end (numbers above are from this machine).
+- ✅ **Server** — verified end-to-end (health, auth, idempotent sync, dashboard).
+- ✅ **Mobile** — `tsc` clean · `expo-doctor` 18/18 · `expo prebuild` generates a valid native Android project. On-device build via the [runbook](mobile/README.md).
 
 ---
 
 <div align="center">
-Built for the NHAI Hackathon 2025.
+Built for the <b>NHAI Hackathon 2025</b> · Secure Offline Facial Recognition &amp; Liveness Detection.
 </div>
