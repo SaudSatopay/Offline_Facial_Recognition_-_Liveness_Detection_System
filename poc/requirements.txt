@@ -1,0 +1,11 @@
+# Python reference implementation for the NHAI offline face-recognition pipeline.
+# Loose pins for install; exact versions are frozen below after a successful install.
+numpy<2
+opencv-python
+mediapipe
+scikit-learn
+matplotlib
+requests
+tqdm
+# TFLite runtime: ai-edge-litert (LiteRT) is preferred (small); tensorflow is the fallback.
+# Installed separately by setup so a missing Windows wheel can't block the core install.

@@ -1,0 +1,28 @@
+{
+  "dataset": "LFW pairs (test subset, funneled)",
+  "pairs_evaluated": 1000,
+  "model": {
+    "name": "MobileFaceNet (ArcFace)",
+    "input": "112x112x3 float32",
+    "embedding_dim": 192,
+    "size_mb": 4.99,
+    "runtime": "TFLite / LiteRT (CPU on this machine; NNAPI/GPU on device)"
+  },
+  "accuracy": {
+    "verification_accuracy_best_threshold": 0.987,
+    "optimal_cosine_threshold": 0.3997,
+    "accuracy_at_operating_threshold": 0.983,
+    "operating_threshold": 0.45,
+    "roc_auc": 0.9916
+  },
+  "latency_cpu": {
+    "detect_ms": 7.99,
+    "align_ms": 0.28,
+    "embed_ms": 4.71,
+    "match_ms": 0.2,
+    "recognition_total_ms": 13.18,
+    "under_1s": true
+  },
+  "face_detection_rate": 0.9985,
+  "wall_seconds": 26.6
+}

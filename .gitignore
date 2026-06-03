@@ -30,6 +30,7 @@ env/
 # ---------- Datasets (do not commit large data) ----------
 poc/data/
 poc/.cache/
+poc/gallery.json
 *.zip
 *.tgz
 
