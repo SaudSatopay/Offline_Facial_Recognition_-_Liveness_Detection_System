@@ -1,19 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Alert } from 'react-native';
-import { useFocusEffect } from 'expo-router';
-import {
-  Camera, useCameraDevice, useCameraPermission,
-} from 'react-native-vision-camera';
-import { Screen, Card, Button, Badge } from '../../src/theme/ui';
-import { colors } from '../../src/theme/colors';
+import { View, StyleSheet, TextInput, Alert } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
+import { Screen, Field, Heading, Body, Mono, Label, Tag, Corners, GradientButton } from '../../src/theme/ui';
+import { colors, gradients } from '../../src/theme/colors';
+import { font } from '../../src/theme/type';
 import { useFacePipeline } from '../../src/camera/useFacePipeline';
 import { l2normalize } from '../../src/ml/match';
 import { enrollUser } from '../../src/db/users';
 import type { FaceSignals } from '../../src/liveness/challenge';
 
-export default function Enroll() {
+const RET = 250;
+
+export default function Enrol() {
   const device = useCameraDevice('front');
   const { hasPermission, requestPermission } = useCameraPermission();
+  const router = useRouter();
   const [active, setActive] = useState(false);
   const [name, setName] = useState('');
   const [face, setFace] = useState<FaceSignals>({ hasFace: false, eyeOpen: 1, smile: 0, yaw: 0 });
@@ -32,98 +37,74 @@ export default function Enroll() {
   const onFace = useCallback((sig: FaceSignals) => setFace(sig), []);
   const onEmbedding = useCallback((emb: number[]) => {
     if (!capturingRef.current) return;
-    capturingRef.current = false;
-    setCapturing(false);
+    capturingRef.current = false; setCapturing(false);
     if (timer.current) clearTimeout(timer.current);
     const user = enrollUser(nameRef.current, l2normalize(emb));
-    Alert.alert('Enrolled ✓', `${user.name} added to the local gallery.`);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Alert.alert('Enrolled ✓', `${user.name} added to the on-device gallery.`, [
+      { text: 'Done' }, { text: 'View people', onPress: () => router.push('/people') },
+    ]);
     setName('');
-  }, []);
+  }, [router]);
 
   const { frameProcessor, modelReady, requestEmbedding } = useFacePipeline(onFace, onEmbedding);
 
-  const onCapture = () => {
+  const capture = () => {
     if (!name.trim()) return Alert.alert('Name required', 'Enter a name before enrolling.');
-    if (!face.hasFace) return Alert.alert('No face', 'Center your face in the frame.');
-    if (!modelReady) return Alert.alert('Loading', 'The model is still loading, try again.');
-    capturingRef.current = true;
-    setCapturing(true);
-    requestEmbedding();
-    timer.current = setTimeout(() => {
-      capturingRef.current = false; setCapturing(false);
-      Alert.alert('Try again', 'Could not capture a clear face. Hold still and retry.');
-    }, 4000);
+    if (!face.hasFace) return Alert.alert('No face', 'Center the face inside the brackets.');
+    if (!modelReady) return Alert.alert('Loading', 'Model still loading — try again.');
+    capturingRef.current = true; setCapturing(true); requestEmbedding();
+    timer.current = setTimeout(() => { capturingRef.current = false; setCapturing(false); Alert.alert('Try again', 'Could not capture a clear face. Hold still and retry.'); }, 4000);
   };
 
-  if (!hasPermission) {
-    return (
-      <Screen>
-        <Card>
-          <Text style={s.h}>Camera permission</Text>
-          <Text style={s.muted}>FaceAttend needs the camera to enroll faces.</Text>
-          <Button title="Grant permission" onPress={requestPermission} />
-        </Card>
-      </Screen>
-    );
-  }
-  if (!device) {
-    return <Screen><Card><Text style={s.muted}>No front camera available.</Text></Card></Screen>;
-  }
+  if (!hasPermission) return (
+    <Screen><Field accent={colors.amber} style={{ marginTop: 60 }}>
+      <Ionicons name="camera-outline" size={28} color={colors.amber} />
+      <Heading>Camera access</Heading><Body dim>Needed to capture a face template.</Body>
+      <GradientButton title="GRANT CAMERA ACCESS" onPress={requestPermission} />
+    </Field></Screen>
+  );
+  if (!device) return <Screen><Field><Mono>NO FRONT CAMERA</Mono></Field></Screen>;
 
   return (
-    <Screen scroll={false} style={{ padding: 0 }}>
-      <View style={s.wrap}>
-        <View style={s.cameraBox}>
-          <Camera
-            style={StyleSheet.absoluteFill}
-            device={device}
-            isActive={active}
-            frameProcessor={frameProcessor}
-          />
-          <View style={[s.oval, { borderColor: face.hasFace ? colors.success : colors.line }]} />
-          <View style={s.topBadges}>
-            <Badge label={modelReady ? 'MODEL READY' : 'LOADING…'} tone={modelReady ? 'success' : 'warn'} />
-            <Badge label={face.hasFace ? 'FACE DETECTED' : 'NO FACE'} tone={face.hasFace ? 'success' : 'neutral'} />
-          </View>
-        </View>
+    <View style={st.root}>
+      <Camera style={StyleSheet.absoluteFill} device={device} isActive={active} frameProcessor={frameProcessor} />
+      <LinearGradient colors={['rgba(16,15,12,0.85)', 'rgba(16,15,12,0)']} style={st.veilTop} pointerEvents="none" />
+      <LinearGradient colors={gradients.veil} style={st.veilBottom} pointerEvents="none" />
 
-        <View style={s.panel}>
-          <Text style={s.h}>Enroll a new face</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Full name"
-            placeholderTextColor={colors.textMut}
-            style={s.input}
-          />
-          <Button
-            title={capturing ? 'Hold still…' : 'Capture & Enroll'}
-            onPress={onCapture}
-            loading={capturing}
-            disabled={!modelReady}
-          />
-          <Text style={s.muted}>
-            Tip: good lighting and a front-facing pose give the best template.
-          </Text>
-        </View>
+      <View style={st.top}>
+        <View style={st.modePill}><Mono size={11} color={colors.amber}>● ENROL MODE</Mono></View>
+        <Tag text={modelReady ? 'MODEL READY' : 'LOADING'} tone={modelReady ? 'live' : 'warn'} />
       </View>
-    </Screen>
+
+      <View style={st.center} pointerEvents="none">
+        <View style={st.reticle}><Corners color={face.hasFace ? colors.green : colors.textFaint} len={28} thick={3} inset={-2} /></View>
+        <Mono size={11} color={colors.textDim} style={{ marginTop: 16 }}>{face.hasFace ? 'FACE LOCKED' : 'ALIGN FACE IN FRAME'}</Mono>
+      </View>
+
+      <View style={st.bottom}>
+        <Field accent={colors.amber}>
+          <Label color={colors.amber}>Register a new face</Label>
+          <TextInput
+            value={name} onChangeText={setName} placeholder="Full name"
+            placeholderTextColor={colors.textFaint} style={st.input}
+          />
+          <GradientButton title={capturing ? 'HOLD STILL…' : 'CAPTURE & ENROL'} loading={capturing} disabled={!modelReady} onPress={capture} icon={!capturing ? <Ionicons name="camera" size={18} color={colors.black} /> : undefined} />
+          <Mono size={11} color={colors.textFaint}>// good light + a frontal pose = best template</Mono>
+        </Field>
+      </View>
+    </View>
   );
 }
 
-const s = StyleSheet.create({
-  wrap: { flex: 1 },
-  cameraBox: { flex: 1, backgroundColor: '#000', overflow: 'hidden' },
-  oval: {
-    position: 'absolute', alignSelf: 'center', top: '12%',
-    width: '64%', height: '70%', borderRadius: 200, borderWidth: 3,
-  },
-  topBadges: { position: 'absolute', top: 16, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' },
-  panel: { padding: 18, gap: 12, backgroundColor: colors.bg },
-  h: { color: colors.text, fontSize: 18, fontWeight: '700' },
-  muted: { color: colors.textMut, fontSize: 13 },
-  input: {
-    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line,
-    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.text, fontSize: 16,
-  },
+const st = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.black },
+  veilTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 140 },
+  veilBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 300 },
+  top: { position: 'absolute', top: 54, left: 18, right: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  modePill: { backgroundColor: 'rgba(16,15,12,0.7)', borderWidth: 1, borderColor: colors.line, borderRadius: 4, paddingHorizontal: 9, paddingVertical: 4 },
+  center: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', marginTop: -40 },
+  reticle: { width: RET, height: RET * 1.25 },
+  bottom: { position: 'absolute', bottom: 28, left: 18, right: 18 },
+  input: { backgroundColor: colors.surfaceAlt, borderWidth: 1, borderColor: colors.line, borderRadius: 6, paddingHorizontal: 13, paddingVertical: 12, color: colors.text, fontSize: 16, fontFamily: font.medium },
 });

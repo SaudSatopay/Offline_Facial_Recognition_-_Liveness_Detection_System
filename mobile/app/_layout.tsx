@@ -1,26 +1,43 @@
 import { useEffect } from 'react';
+import { View, Image, Text } from 'react-native';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
+import {
+  Archivo_400Regular, Archivo_500Medium, Archivo_600SemiBold,
+  Archivo_700Bold, Archivo_800ExtraBold, Archivo_900Black,
+} from '@expo-google-fonts/archivo';
+import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 import { getDb } from '../src/db/database';
 import { colors } from '../src/theme/colors';
 
 export default function RootLayout() {
-  useEffect(() => {
-    getDb(); // ensure schema exists before any screen queries
-  }, []);
+  const [fontsLoaded] = useFonts({
+    Archivo_400Regular, Archivo_500Medium, Archivo_600SemiBold,
+    Archivo_700Bold, Archivo_800ExtraBold, Archivo_900Black,
+    SpaceMono_400Regular, SpaceMono_700Bold,
+  });
+
+  useEffect(() => { getDb(); }, []);
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+        <Image source={require('../assets/adaptive-icon.png')} style={{ width: 110, height: 110 }} />
+        <Text style={{ color: colors.textFaint, fontSize: 12, letterSpacing: 2 }}>LOADING…</Text>
+      </View>
+    );
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
       <SafeAreaProvider>
         <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.bg },
-          }}
-        />
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'fade' }} />
+        </View>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

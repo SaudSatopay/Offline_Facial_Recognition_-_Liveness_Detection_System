@@ -1,112 +1,137 @@
 import { useCallback, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Screen, Card, Button, Badge, StatCard, SectionTitle, Row } from '../../src/theme/ui';
-import { colors } from '../../src/theme/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  Screen, Field, Display, Heading, Body, Mono, Label, Tag, StatTile,
+  Corners, Ticks, Pulse, Stagger, GradientButton, Divider,
+} from '../../src/theme/ui';
+import { colors, gradients } from '../../src/theme/colors';
+import { font } from '../../src/theme/type';
 import { countUsers } from '../../src/db/users';
-import { countToday } from '../../src/db/attendance';
+import { countToday, listAttendance, AttendanceRecord } from '../../src/db/attendance';
 import { MODEL_SIZE_MB } from '../../src/ml/constants';
 import { useSync } from '../../src/sync/useSync';
 
-export default function Dashboard() {
+export default function Status() {
   const router = useRouter();
   const sync = useSync();
   const [users, setUsers] = useState(0);
   const [today, setToday] = useState(0);
+  const [recent, setRecent] = useState<AttendanceRecord[]>([]);
 
-  useFocusEffect(
-    useCallback(() => {
-      setUsers(countUsers());
-      setToday(countToday());
-      sync.refreshCount();
-    }, [sync]),
-  );
+  useFocusEffect(useCallback(() => {
+    setUsers(countUsers());
+    setToday(countToday());
+    setRecent(listAttendance(4));
+    sync.refreshCount();
+  }, [sync]));
 
   return (
     <Screen>
-      <View style={s.hero}>
-        <Text style={s.title}>FaceAttend</Text>
-        <Text style={s.subtitle}>Offline facial recognition + liveness</Text>
-        <Row style={{ marginTop: 10, flexWrap: 'wrap' }}>
-          <Badge label="100% OFFLINE" tone="success" />
-          <Badge label="< 1s AUTH" tone="warn" />
-          <Badge label="LIVENESS ON" tone="neutral" />
-        </Row>
-      </View>
+      {/* terminal header */}
+      <Stagger index={0}>
+        <View style={s.header}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={s.mark}><Corners color={colors.amber} len={9} thick={2} inset={3} /></View>
+            <Display size={26}>FACE<Text style={{ color: colors.amber }}>ATTEND</Text></Display>
+          </View>
+          <View style={s.sysline}>
+            <Pulse color={colors.green} size={7} />
+            <Mono size={11} color={colors.textDim}>SYS // OFFLINE-READY // MODEL OK</Mono>
+          </View>
+        </View>
+      </Stagger>
 
-      <Row>
-        <StatCard label="Enrolled" value={users} accent={colors.primary} />
-        <StatCard label="Today" value={today} accent={colors.success} />
-      </Row>
-      <Row>
-        <StatCard label="Model" value={`${MODEL_SIZE_MB} MB`} />
-        <StatCard label="Accuracy" value="98.3%" accent={colors.success} />
-      </Row>
+      {/* primary scan CTA */}
+      <Stagger index={1}>
+        <Pressable onPress={() => router.push('/attendance')}>
+          <View style={s.cta}>
+            <Corners color={colors.amber} len={22} thick={2} inset={8} />
+            <LinearGradient colors={['rgba(255,122,0,0.18)', 'rgba(255,122,0,0.02)']} style={StyleSheet.absoluteFill} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ gap: 4 }}>
+                <Label color={colors.amber}>Begin verification</Label>
+                <Heading style={{ fontSize: 22 }}>Scan a face</Heading>
+                <Body dim>Liveness check → on-device match</Body>
+              </View>
+              <View style={s.scanIcon}>
+                <Ionicons name="scan" size={30} color={colors.amber} />
+              </View>
+            </View>
+          </View>
+        </Pressable>
+      </Stagger>
 
-      <SectionTitle>Quick actions</SectionTitle>
-      <Button title="📷  Mark Attendance" onPress={() => router.push('/attendance')} />
-      <Button title="＋  Enroll a Face" variant="ghost" onPress={() => router.push('/enroll')} />
+      {/* stat grid */}
+      <Stagger index={2}>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <StatTile k="Enrolled" v={pad(users)} accent={colors.text} />
+          <StatTile k="Today" v={pad(today)} accent={colors.green} />
+        </View>
+      </Stagger>
+      <Stagger index={3}>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <StatTile k="Model" v={`${MODEL_SIZE_MB}MB`} accent={colors.amber} />
+          <StatTile k="Accuracy" v="98.3%" accent={colors.green} />
+        </View>
+      </Stagger>
 
-      <SectionTitle>Cloud sync</SectionTitle>
-      <Card>
-        <Row style={{ justifyContent: 'space-between' }}>
-          <Row>
-            <Ionicons
-              name={sync.online ? 'cloud-done' : 'cloud-offline'}
-              size={20}
-              color={sync.online ? colors.success : colors.textMut}
-            />
-            <Text style={s.body}>{sync.online ? 'Online' : 'Offline'}</Text>
-          </Row>
-          <Badge
-            label={sync.unsynced > 0 ? `${sync.unsynced} pending` : 'all synced'}
-            tone={sync.unsynced > 0 ? 'warn' : 'success'}
-          />
-        </Row>
-        <Button
-          title={sync.syncing ? 'Syncing…' : 'Sync now'}
-          variant="ghost"
-          loading={sync.syncing}
-          disabled={sync.unsynced === 0}
-          onPress={sync.syncNow}
-        />
-        {sync.lastError ? <Text style={s.err}>{sync.lastError}</Text> : null}
-      </Card>
+      {/* sync */}
+      <Stagger index={4}>
+        <Field accent={sync.online ? colors.green : colors.textFaint}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+              <Ionicons name={sync.online ? 'cloud-done-outline' : 'cloud-offline-outline'} size={18} color={sync.online ? colors.green : colors.textDim} />
+              <Mono color={colors.text}>{sync.online ? 'CLOUD ONLINE' : 'CLOUD OFFLINE'}</Mono>
+            </View>
+            <Tag text={sync.unsynced > 0 ? `${sync.unsynced} QUEUED` : 'SYNCED'} tone={sync.unsynced > 0 ? 'warn' : 'live'} />
+          </View>
+        </Field>
+      </Stagger>
 
-      <SectionTitle>How it works</SectionTitle>
-      <Card>
-        <Step n="1" t="Enroll" d="Capture a face once — a 192-d template is stored locally." />
-        <Step n="2" t="Liveness" d="A random blink / smile / head-turn check blocks photo spoofing." />
-        <Step n="3" t="Recognize" d="MobileFaceNet embeds + matches on-device in milliseconds." />
-        <Step n="4" t="Sync" d="Attendance queues offline and uploads when a network returns." />
-      </Card>
+      {/* recent activity */}
+      <Stagger index={5}>
+        <Divider label="Recent activity" />
+        {recent.length === 0 ? (
+          <Mono color={colors.textFaint} style={{ paddingVertical: 8 }}>// no scans yet — tap "Scan a face"</Mono>
+        ) : recent.map((r) => (
+          <View key={r.id} style={s.recentRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: font.semibold, color: r.name ? colors.text : colors.textDim, fontSize: 14 }}>{r.name ?? 'Unknown'}</Text>
+              <Mono size={11} color={colors.textFaint}>{time(r.timestamp)} · {(r.challenge ?? '—').toUpperCase()}</Mono>
+            </View>
+            <Tag text={r.liveness_passed ? 'LIVE' : 'SPOOF'} tone={r.liveness_passed ? 'live' : 'spoof'} />
+          </View>
+        ))}
+      </Stagger>
+
+      {/* manage people */}
+      <Stagger index={6}>
+        <Pressable onPress={() => router.push('/people')} style={s.peopleRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Ionicons name="people-outline" size={18} color={colors.amber} />
+            <Mono color={colors.text}>MANAGE ENROLLED ({users})</Mono>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={colors.textFaint} />
+        </Pressable>
+      </Stagger>
+
+      <Ticks count={40} style={{ marginTop: 8, opacity: 0.5 }} />
     </Screen>
   );
 }
 
-function Step({ n, t, d }: { n: string; t: string; d: string }) {
-  return (
-    <Row style={{ alignItems: 'flex-start' }}>
-      <View style={s.stepNum}><Text style={s.stepNumText}>{n}</Text></View>
-      <View style={{ flex: 1 }}>
-        <Text style={s.body}>{t}</Text>
-        <Text style={s.muted}>{d}</Text>
-      </View>
-    </Row>
-  );
-}
+const pad = (n: number) => String(n).padStart(2, '0');
+const time = (t: number) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 const s = StyleSheet.create({
-  hero: { gap: 4, marginBottom: 4 },
-  title: { color: colors.text, fontSize: 30, fontWeight: '800' },
-  subtitle: { color: colors.textMut, fontSize: 14 },
-  body: { color: colors.text, fontSize: 15, fontWeight: '600' },
-  muted: { color: colors.textMut, fontSize: 13, marginTop: 2 },
-  err: { color: colors.danger, fontSize: 12 },
-  stepNum: {
-    width: 26, height: 26, borderRadius: 13, backgroundColor: colors.primaryDim,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  stepNumText: { color: colors.primary, fontWeight: '800', fontSize: 13 },
+  header: { gap: 10, marginBottom: 2 },
+  mark: { width: 22, height: 22 },
+  sysline: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cta: { backgroundColor: colors.surface, borderRadius: 8, borderWidth: 1, borderColor: colors.lineBright, padding: 20, overflow: 'hidden' },
+  scanIcon: { width: 56, height: 56, borderRadius: 8, borderWidth: 1, borderColor: colors.amber, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.amberDim },
+  recentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: 8, padding: 13 },
+  peopleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, borderRadius: 8, padding: 15 },
 });
