@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "FaceAttend",
+    "slug": "offline-faceattend",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "faceattend",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0b1020"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.saudsatopay.faceattend",
+      "infoPlist": {
+        "NSCameraUsageDescription": "FaceAttend uses the camera to recognize faces and verify liveness for secure attendance."
+      }
+    },
+    "android": {
+      "package": "com.saudsatopay.faceattend",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0b1020"
+      },
+      "permissions": ["android.permission.CAMERA"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "react-native-fast-tflite",
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "FaceAttend needs camera access to recognize faces and verify liveness.",
+          "enableMicrophonePermission": false,
+          "enableCodeScanner": false
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 34
+          }
+        }
+      ]
+    ]
+  }
+}
