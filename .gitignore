@@ -1,0 +1,52 @@
+# ---------- Node / React Native / Expo ----------
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.tsbuildinfo
+npm-debug.*
+yarn-error.*
+
+# Native build output
+mobile/android/
+mobile/ios/
+*.apk
+*.aab
+*.ipa
+*.keystore
+!debug.keystore
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ---------- Datasets (do not commit large data) ----------
+poc/data/
+poc/.cache/
+*.zip
+*.tgz
+
+# ---------- Databases / runtime ----------
+*.sqlite
+*.sqlite3
+*.db
+server/data/
+
+# ---------- Env / secrets ----------
+.env
+.env.*
+!.env.example
+
+# ---------- OS / editor ----------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
