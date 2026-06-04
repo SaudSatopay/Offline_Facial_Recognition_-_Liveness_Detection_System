@@ -77,6 +77,16 @@ Reproduce: `cd poc && python benchmark.py --pairs 1000`.
 
 > **Model size vs app size:** the *AI model* is **4.99 MB** — the "lightweight (~20 MB)" target, beaten ~4×. The Android **APK is ~37 MB**: the whole app bundle (RN runtime + MLKit + TFLite native libraries for arm64 + the model).
 
+### Robustness across capture conditions
+
+Remote sites mean bad light, cheap cameras and off-axis glances, so we stress-test the recogniser by degrading the **live probe** (clean enrolled template vs. degraded scan) across 11 realistic conditions — glare, low / very-low light, low contrast, motion blur, downscaling, sensor noise, JPEG compression, and ±12° pose tilt. Accuracy stays **≥ 96.7%** (≥ 98.6% of clean) and **ROC-AUC ≥ 0.987** on every one.
+
+<div align="center">
+<img src="docs/benchmarks/conditions.png" width="92%" alt="recognition accuracy and ROC-AUC per capture condition"/>
+</div>
+
+Full table, protocol and caveats: [`docs/benchmarks/conditions.md`](docs/benchmarks/conditions.md). Reproduce: `cd poc && python eval_conditions.py --pairs 600`.
+
 ## The three components
 
 | Folder | What it is | Run |

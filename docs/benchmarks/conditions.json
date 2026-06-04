@@ -1,0 +1,131 @@
+{
+  "dataset": "LFW pairs (test subset, funneled)",
+  "pairs_evaluated": 600,
+  "protocol": "clean enrolled template (A) vs degraded live probe (B); degradations applied to the aligned 112x112 crop",
+  "operating_threshold": 0.45,
+  "embedding_dim": 192,
+  "model_size_mb": 4.99,
+  "conditions": [
+    {
+      "acc_operating": 0.98,
+      "acc_best": 0.9833,
+      "best_threshold": 0.3997,
+      "roc_auc": 0.99,
+      "genuine_mean": 0.7426,
+      "impostor_mean": 0.0163,
+      "condition": "baseline",
+      "group": "reference",
+      "acc_retention_vs_baseline": 1.0
+    },
+    {
+      "acc_operating": 0.9717,
+      "acc_best": 0.9783,
+      "best_threshold": 0.4246,
+      "roc_auc": 0.9896,
+      "genuine_mean": 0.6918,
+      "impostor_mean": 0.0185,
+      "condition": "bright_glare",
+      "group": "lighting",
+      "acc_retention_vs_baseline": 0.9915
+    },
+    {
+      "acc_operating": 0.9783,
+      "acc_best": 0.985,
+      "best_threshold": 0.418,
+      "roc_auc": 0.989,
+      "genuine_mean": 0.7303,
+      "impostor_mean": 0.0141,
+      "condition": "low_light",
+      "group": "lighting",
+      "acc_retention_vs_baseline": 0.9983
+    },
+    {
+      "acc_operating": 0.975,
+      "acc_best": 0.985,
+      "best_threshold": 0.4038,
+      "roc_auc": 0.9887,
+      "genuine_mean": 0.714,
+      "impostor_mean": 0.0145,
+      "condition": "very_low_light",
+      "group": "lighting",
+      "acc_retention_vs_baseline": 0.9949
+    },
+    {
+      "acc_operating": 0.98,
+      "acc_best": 0.985,
+      "best_threshold": 0.3976,
+      "roc_auc": 0.9892,
+      "genuine_mean": 0.7243,
+      "impostor_mean": 0.014,
+      "condition": "low_contrast",
+      "group": "lighting",
+      "acc_retention_vs_baseline": 1.0
+    },
+    {
+      "acc_operating": 0.975,
+      "acc_best": 0.9833,
+      "best_threshold": 0.3988,
+      "roc_auc": 0.9895,
+      "genuine_mean": 0.705,
+      "impostor_mean": 0.0199,
+      "condition": "motion_blur",
+      "group": "optics",
+      "acc_retention_vs_baseline": 0.9949
+    },
+    {
+      "acc_operating": 0.9733,
+      "acc_best": 0.9783,
+      "best_threshold": 0.3963,
+      "roc_auc": 0.9896,
+      "genuine_mean": 0.6955,
+      "impostor_mean": 0.0182,
+      "condition": "downscale_40px",
+      "group": "optics",
+      "acc_retention_vs_baseline": 0.9932
+    },
+    {
+      "acc_operating": 0.9667,
+      "acc_best": 0.9783,
+      "best_threshold": 0.3849,
+      "roc_auc": 0.99,
+      "genuine_mean": 0.6519,
+      "impostor_mean": 0.011,
+      "condition": "sensor_noise",
+      "group": "sensor",
+      "acc_retention_vs_baseline": 0.9864
+    },
+    {
+      "acc_operating": 0.975,
+      "acc_best": 0.9783,
+      "best_threshold": 0.3832,
+      "roc_auc": 0.9901,
+      "genuine_mean": 0.6851,
+      "impostor_mean": 0.0153,
+      "condition": "jpeg_q18",
+      "group": "sensor",
+      "acc_retention_vs_baseline": 0.9949
+    },
+    {
+      "acc_operating": 0.9683,
+      "acc_best": 0.9717,
+      "best_threshold": 0.4126,
+      "roc_auc": 0.9871,
+      "genuine_mean": 0.6641,
+      "impostor_mean": 0.0133,
+      "condition": "pose_tilt_+12",
+      "group": "pose",
+      "acc_retention_vs_baseline": 0.9881
+    },
+    {
+      "acc_operating": 0.97,
+      "acc_best": 0.9733,
+      "best_threshold": 0.42,
+      "roc_auc": 0.9893,
+      "genuine_mean": 0.684,
+      "impostor_mean": 0.0162,
+      "condition": "pose_tilt_-12",
+      "group": "pose",
+      "acc_retention_vs_baseline": 0.9898
+    }
+  ]
+}
