@@ -1,0 +1,25 @@
+{
+  "model": "FaceAntiSpoofing.tflite (Deep-Tree, 256x256 -> spoof score)",
+  "dataset": "1",
+  "counts": {
+    "real": 400,
+    "spoof": 400
+  },
+  "operating_threshold": 0.2,
+  "at_operating_threshold": {
+    "live_pass": 0.495,
+    "spoof_reject": 0.935,
+    "balanced_acc": 0.715
+  },
+  "roc_auc": 0.8505,
+  "best_balanced": {
+    "threshold": 0.9728,
+    "balanced_acc": 0.8025,
+    "live_pass": 0.7525,
+    "spoof_reject": 0.8525
+  },
+  "score_means": {
+    "real": 0.4103,
+    "spoof": 0.9037
+  }
+}

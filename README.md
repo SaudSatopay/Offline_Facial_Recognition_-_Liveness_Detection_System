@@ -105,7 +105,9 @@ The most common attendance fraud is holding up a **photo** or **video** of someo
 
 > *"Please blink"* · *"Please smile"* · *"Turn your head"*
 
-— and verifies completion from MLKit's `leftEyeOpenProbability`, `smilingProbability`, and head-yaw signals. A static photo can't blink on demand, a pre-recorded video won't match the *random* prompt, and only a real, present human passes. Recognition only runs **after** liveness passes. (A passive texture-based anti-spoof model can be added as a second layer — see `docs/architecture.md`.)
+— and verifies completion from MLKit's `leftEyeOpenProbability`, `smilingProbability`, and head-yaw signals. A static photo can't blink on demand, a pre-recorded video won't match the *random* prompt, and only a real, present human passes. Recognition only runs **after** liveness passes.
+
+We also **demonstrate a passive, texture-based anti-spoof** model as an optional second layer: on **LCC-FASD** it catches **93.5%** of print/replay attacks (ROC-AUC **0.85**). It's threshold-sensitive across cameras, so it's a tunable add-on *behind* the primary active defense — details + honest caveats in [`docs/benchmarks/antispoofing.md`](docs/benchmarks/antispoofing.md).
 
 ## Tech stack
 
