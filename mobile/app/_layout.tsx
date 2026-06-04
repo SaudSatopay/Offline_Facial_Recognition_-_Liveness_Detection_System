@@ -25,10 +25,11 @@ export default function RootLayout() {
     Archivo_400Regular, Archivo_500Medium, Archivo_600SemiBold,
     Archivo_700Bold, Archivo_800ExtraBold, Archivo_900Black,
     SpaceMono_400Regular, SpaceMono_700Bold,
-    // @expo/vector-icons gates rendering on Font.isLoaded('ionicons') — LOWERCASE.
-    // Loading it under any other case (or natively) leaves every icon blank.
-    ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
   });
+  // The Ionicons glyph font ('ionicons') is bundled natively at
+  // android/app/src/main/assets/fonts/ionicons.ttf — runtime loading of it
+  // failed in this release, so Android resolves the family at the OS level and
+  // the custom <Glyph> (src/theme/Glyph) renders the icons from it.
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
