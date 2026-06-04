@@ -21,12 +21,17 @@ export default function Status() {
   const [today, setToday] = useState(0);
   const [recent, setRecent] = useState<AttendanceRecord[]>([]);
 
+  // NOTE: deps MUST be stable. `sync` is a fresh object every render, so listing
+  // it here caused an infinite focus-effect -> setState -> re-render loop that
+  // froze the JS thread (UI rendered but every touch was dead). refreshCount is
+  // a stable useCallback, so an empty dep list is correct.
+  const refreshSync = sync.refreshCount;
   useFocusEffect(useCallback(() => {
     setUsers(countUsers());
     setToday(countToday());
     setRecent(listAttendance(4));
-    sync.refreshCount();
-  }, [sync]));
+    refreshSync();
+  }, [refreshSync]));
 
   return (
     <Screen>
