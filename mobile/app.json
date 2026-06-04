@@ -55,12 +55,7 @@
           }
         }
       ],
-      [
-        "expo-font",
-        {
-          "fonts": ["./assets/fonts/Ionicons.ttf"]
-        }
-      ],
+      "expo-font",
       "expo-asset"
     ]
   }
