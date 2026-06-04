@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, Pressable, Alert } from 'react-native
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
+import { Glyph as Ionicons } from '../src/theme/Glyph';
 import { Grain, Mono, Label, Tag, Display, GradientButton } from '../src/theme/ui';
 import { colors } from '../src/theme/colors';
 import { font } from '../src/theme/type';

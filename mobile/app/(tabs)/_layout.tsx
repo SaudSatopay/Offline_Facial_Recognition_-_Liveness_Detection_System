@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Glyph as Ionicons } from '../../src/theme/Glyph';
 import { colors } from '../../src/theme/colors';
 import { font } from '../../src/theme/type';
 

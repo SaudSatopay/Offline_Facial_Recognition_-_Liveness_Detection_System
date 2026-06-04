@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Glyph as Ionicons } from '../../src/theme/Glyph';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Screen, Field, Display, Heading, Body, Mono, Label, Tag, StatTile,

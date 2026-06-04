@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Glyph as Ionicons } from '../../src/theme/Glyph';
 import { Grain, Display, Mono, Label, Tag, Ticks } from '../../src/theme/ui';
 import { colors } from '../../src/theme/colors';
 import { font } from '../../src/theme/type';

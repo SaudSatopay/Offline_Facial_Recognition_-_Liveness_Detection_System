@@ -4,7 +4,7 @@ import { useFocusEffect } from 'expo-router';
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
+import { Glyph as Ionicons } from '../../src/theme/Glyph';
 import {
   Screen, Field, Display, Heading, Body, Mono, Label, Tag, Corners, Meter, GradientButton, GhostButton,
 } from '../../src/theme/ui';

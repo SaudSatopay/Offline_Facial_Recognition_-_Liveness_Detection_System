@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Alert, Pressable } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Glyph as Ionicons } from '../../src/theme/Glyph';
 import {
   Screen, Field, Display, Mono, Label, Body, Tag, GradientButton, GhostButton, Divider,
 } from '../../src/theme/ui';
