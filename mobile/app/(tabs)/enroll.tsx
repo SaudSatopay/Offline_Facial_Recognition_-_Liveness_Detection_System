@@ -68,7 +68,7 @@ export default function Enrol() {
 
   return (
     <View style={st.root}>
-      <Camera style={StyleSheet.absoluteFill} device={device} isActive={active} frameProcessor={frameProcessor} />
+      {active && <Camera style={StyleSheet.absoluteFill} device={device} isActive={true} frameProcessor={frameProcessor} />}
       <LinearGradient colors={['rgba(16,15,12,0.85)', 'rgba(16,15,12,0)']} style={st.veilTop} pointerEvents="none" />
       <LinearGradient colors={gradients.veil} style={st.veilBottom} pointerEvents="none" />
 

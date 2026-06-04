@@ -12,6 +12,7 @@ import {
   Archivo_700Bold, Archivo_800ExtraBold, Archivo_900Black,
 } from '@expo-google-fonts/archivo';
 import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { getDb } from '../src/db/database';
 import { colors } from '../src/theme/colors';
 
@@ -25,6 +26,7 @@ export default function RootLayout() {
     Archivo_400Regular, Archivo_500Medium, Archivo_600SemiBold,
     Archivo_700Bold, Archivo_800ExtraBold, Archivo_900Black,
     SpaceMono_400Regular, SpaceMono_700Bold,
+    ...Ionicons.font, // @expo/vector-icons doesn't auto-load reliably in release
   });
   const [timedOut, setTimedOut] = useState(false);
 
