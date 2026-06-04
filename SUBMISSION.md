@@ -43,6 +43,7 @@
 | **Mid-range, 3 GB RAM** | ✅ | TFLite + NNAPI/GPU, Hermes, ~5 MB resident |
 | Recognition **< 1 second** | ✅ | **13 ms** measured + on-screen badge |
 | **Offline → cloud sync (+ purge)** | ✅ | idempotent sync + retention purge |
+| **No duplicate enrolment** | ✅ | same face or name blocked at enrol (`mobile/app/(tabs)/enroll.tsx`) |
 
 > **Model size vs app size:** the *AI model* is **4.99 MB** (the “< 20 MB” target). The Android **APK is ~37 MB** — that's the whole app bundle (RN runtime + MLKit + TFLite native libraries for arm64 + the model). The lightweight requirement is about the model, which we beat ~4×.
 

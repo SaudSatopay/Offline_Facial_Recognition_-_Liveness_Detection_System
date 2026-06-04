@@ -37,6 +37,7 @@ Build an AI system that **recognizes faces offline**, **detects fake attendance*
 | **Remote / no-network** | offline-first SQLite + sync queue | airplane-mode proof |
 | **React Native**, Android & iOS | Expo (prebuild) app, native frame-processor pipeline | `mobile/` |
 | **Offline → cloud sync + purge** | idempotent queue flush when online; cloud-confirmed records auto-purged (30 d) to bound storage | `server/` + live dashboard |
+| **No duplicate identities** | enrol blocks an already-registered **face or name** (cosine dup-threshold + case-insensitive name check) | `mobile/app/(tabs)/enroll.tsx` |
 
 > Accuracy, latency and model-size numbers are **measured** by `poc/benchmark.py` on the standard LFW
 > verification protocol and saved to [`docs/benchmarks/metrics.json`](docs/benchmarks/metrics.json) — not estimated.
