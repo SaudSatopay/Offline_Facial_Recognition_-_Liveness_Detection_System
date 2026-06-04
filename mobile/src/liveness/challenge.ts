@@ -31,7 +31,8 @@ export type FaceSignals = {
 const EYE_CLOSED = 0.35;
 const EYE_OPEN = 0.7;
 const SMILE_ON = 0.6;
-const YAW_TURN = 20;
+const YAW_TURN = 14;    // absolute yaw to accept a turn
+const YAW_RANGE = 12;   // OR: head yaw moved this many degrees during the attempt
 
 export function pickChallenge(): Challenge {
   return CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
@@ -40,6 +41,8 @@ export function pickChallenge(): Challenge {
 export class LivenessFSM {
   readonly challenge: Challenge;
   private blinkStage = 0; // 0 = waiting closed, 1 = saw closed (waiting open)
+  private yawMin = 999;
+  private yawMax = -999;
   done = false;
 
   constructor(challenge: Challenge) {
@@ -60,7 +63,13 @@ export class LivenessFSM {
         if (sig.smile > SMILE_ON) this.done = true;
         break;
       case 'turn_head':
-        if (Math.abs(sig.yaw) > YAW_TURN) this.done = true;
+        // Track the yaw range so we detect the head *moving* (robust to the
+        // detector's baseline offset and to the face being lost at large angles).
+        this.yawMin = Math.min(this.yawMin, sig.yaw);
+        this.yawMax = Math.max(this.yawMax, sig.yaw);
+        if (Math.abs(sig.yaw) > YAW_TURN || this.yawMax - this.yawMin > YAW_RANGE) {
+          this.done = true;
+        }
         break;
     }
     return this.done;

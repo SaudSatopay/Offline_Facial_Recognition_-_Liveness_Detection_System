@@ -116,6 +116,12 @@ export default function Scan() {
           <View style={st.promptWrap}>
             <Display size={30} style={{ textAlign: 'center' }}>{PROMPTS[challenge]}</Display>
             <Mono size={12} color={colors.amberBright} style={{ textAlign: 'center', marginTop: 6 }}>{HINTS[challenge].toUpperCase()}</Mono>
+            <Mono size={11} color={face.hasFace ? colors.textDim : colors.red} style={{ textAlign: 'center', marginTop: 10 }}>
+              {!face.hasFace ? 'NO FACE — CENTER YOUR FACE'
+                : challenge === 'turn_head' ? `YAW ${face.yaw.toFixed(0)}°`
+                : challenge === 'blink' ? `EYE ${face.eyeOpen.toFixed(2)}`
+                : `SMILE ${Math.round(face.smile * 100)}%`}
+            </Mono>
           </View>
         )}
         <View style={[st.reticle, { borderColor: 'transparent' }]}>
