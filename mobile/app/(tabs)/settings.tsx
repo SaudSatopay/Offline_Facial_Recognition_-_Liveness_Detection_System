@@ -34,6 +34,10 @@ export default function Config() {
     { text: 'Cancel', style: 'cancel' },
     { text: 'Delete', style: 'destructive', onPress: () => { getDb().execSync('DELETE FROM users; DELETE FROM attendance;'); Alert.alert('Cleared', 'Local data removed.'); sync.refreshCount(); } },
   ]);
+  const purge = () => Alert.alert('Purge synced records', 'Free local storage by removing attendance records already saved to the cloud? Unsynced records are kept. (Synced records are also auto-purged after 30 days.)', [
+    { text: 'Cancel', style: 'cancel' },
+    { text: 'Purge', style: 'destructive', onPress: () => { const n = sync.purgeNow(); Alert.alert('Purged', `${n} cloud-synced record(s) removed from the device.`); } },
+  ]);
 
   return (
     <Screen>
@@ -50,10 +54,12 @@ export default function Config() {
           <GradientButton title="SAVE" onPress={save} style={{ flex: 1 }} />
           <GhostButton title={testing ? 'TESTING…' : 'TEST'} loading={testing} onPress={test} style={{ flex: 1 }} />
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Tag text={sync.online ? 'ONLINE' : 'OFFLINE'} tone={sync.online ? 'live' : 'neutral'} />
-          <GhostButton title={sync.syncing ? 'SYNCING…' : `SYNC (${sync.unsynced})`} loading={sync.syncing} disabled={sync.unsynced === 0} onPress={sync.syncNow} style={{ paddingHorizontal: 18 }} />
+          <GhostButton title={sync.syncing ? 'SYNCING…' : `SYNC (${sync.unsynced})`} loading={sync.syncing} disabled={sync.unsynced === 0} onPress={sync.syncNow} style={{ flex: 1 }} />
+          <GhostButton title="PURGE" onPress={purge} style={{ paddingHorizontal: 16 }} />
         </View>
+        <Mono size={10.5} color={colors.textFaint}>// purge frees storage by deleting cloud-synced records (auto after 30d)</Mono>
       </Field>
 
       <Divider label="Recognition threshold" />

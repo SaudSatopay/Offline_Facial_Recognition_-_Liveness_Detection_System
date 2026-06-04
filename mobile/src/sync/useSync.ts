@@ -6,8 +6,12 @@ import { getSettings } from '../config';
 import { postUsers, postAttendance } from './client';
 import { getUnsyncedUsers, markUsersSynced } from '../db/users';
 import {
-  getUnsyncedAttendance, markAttendanceSynced, countUnsynced,
+  getUnsyncedAttendance, markAttendanceSynced, countUnsynced, purgeSynced,
 } from '../db/attendance';
+
+// Records that are safely in the cloud are kept locally for this long, then
+// purged to keep on-device storage bounded for long-running remote deployments.
+const RETENTION_DAYS = 30;
 
 export type SyncState = {
   online: boolean;
@@ -40,6 +44,9 @@ export function useSync() {
       const accAtt = await postAttendance(serverUrl, apiKey, records);
       markAttendanceSynced(accAtt);
 
+      // purge cloud-confirmed records past the retention window
+      purgeSynced(RETENTION_DAYS * 24 * 3600 * 1000);
+
       setState((s) => ({
         ...s, syncing: false, unsynced: countUnsynced(), lastSync: Date.now(),
       }));
@@ -49,6 +56,13 @@ export function useSync() {
       return false;
     }
   }, []);
+
+  // manual purge of all cloud-confirmed records (frees local storage on demand)
+  const purgeNow = useCallback((): number => {
+    const removed = purgeSynced(0);
+    refreshCount();
+    return removed;
+  }, [refreshCount]);
 
   // watch connectivity; auto-sync when we come online with a backlog
   useEffect(() => {
@@ -61,5 +75,5 @@ export function useSync() {
     return () => unsub();
   }, [refreshCount, syncNow]);
 
-  return { ...state, syncNow, refreshCount };
+  return { ...state, syncNow, refreshCount, purgeNow };
 }

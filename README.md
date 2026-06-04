@@ -14,6 +14,7 @@
 [![Offline](https://img.shields.io/badge/works-100%25%20offline-brightgreen)](#)
 [![Accuracy](https://img.shields.io/badge/LFW%20accuracy-98.3%25-success)](#)
 [![Speed](https://img.shields.io/badge/recognition-13%20ms-orange)](#)
+[![Device](https://img.shields.io/badge/verified%20on-Galaxy%20S24%20Ultra-success)](#)
 
 </div>
 
@@ -35,7 +36,7 @@ Build an AI system that **recognizes faces offline**, **detects fake attendance*
 | **Mid-range phones / 3 GB RAM** | TFLite + NNAPI/GPU delegate; ~5 MB resident | Hermes engine, old-arch RN |
 | **Remote / no-network** | offline-first SQLite + sync queue | airplane-mode proof |
 | **React Native**, Android & iOS | Expo (prebuild) app, native frame-processor pipeline | `mobile/` |
-| **Offline → cloud sync** | local queue flushed to a self-hosted server when online | `server/` + live dashboard |
+| **Offline → cloud sync + purge** | idempotent queue flush when online; cloud-confirmed records auto-purged (30 d) to bound storage | `server/` + live dashboard |
 
 > Accuracy, latency and model-size numbers are **measured** by `poc/benchmark.py` on the standard LFW
 > verification protocol and saved to [`docs/benchmarks/metrics.json`](docs/benchmarks/metrics.json) — not estimated.
@@ -74,6 +75,8 @@ All boxes from *frame* to *attendance saved* run **on the phone, offline**. Only
 
 Reproduce: `cd poc && python benchmark.py --pairs 1000`.
 
+> **Model size vs app size:** the *AI model* is **4.99 MB** — the "lightweight (~20 MB)" target, beaten ~4×. The Android **APK is ~37 MB**: the whole app bundle (RN runtime + MLKit + TFLite native libraries for arm64 + the model).
+
 ## The three components
 
 | Folder | What it is | Run |
@@ -105,14 +108,17 @@ The most common attendance fraud is holding up a **photo** or **video** of someo
 mobile/   Expo RN app   — app/(tabs) screens + src/{camera,liveness,ml,db,sync,theme}
 poc/      Python ref     — pipeline/ + benchmark.py + recognize.py (webcam demos)
 server/   Sync backend   — Express + SQLite + live dashboard
-docs/     architecture · demo script · benchmarks (metrics + plots)
+docs/     architecture · integration · demo script · benchmarks (metrics + plots)
 ```
 
 ## Validation status
 
-- ✅ **POC** — runs and is benchmarked end-to-end (numbers above are from this machine).
+- ✅ **Running on a real device** — confirmed end-to-end on a **Samsung Galaxy S24 Ultra**: enrolment, **blink / smile / head-turn liveness**, on-device recognition (with a live millisecond latency badge), and offline→cloud sync all work. Install the prebuilt APK or build via the [runbook](mobile/README.md).
+- ✅ **POC** — runs and is benchmarked end-to-end (the numbers above are from this machine).
 - ✅ **Server** — verified end-to-end (health, auth, idempotent sync, dashboard).
-- ✅ **Mobile** — `tsc` clean · `expo-doctor` 18/18 · `expo prebuild` generates a valid native Android project. On-device build via the [runbook](mobile/README.md).
+- ✅ **Mobile** — `tsc` clean · `expo-doctor` 18/18 · ships an **arm64 release APK (~37 MB)** — the AI model inside it is **4.99 MB**.
+
+See **[SUBMISSION.md](SUBMISSION.md)** for the mapping to the evaluation criteria and **[docs/integration.md](docs/integration.md)** for dropping the pipeline into an existing RN app.
 
 ---
 

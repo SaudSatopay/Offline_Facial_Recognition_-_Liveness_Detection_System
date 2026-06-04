@@ -64,3 +64,19 @@ export function markAttendanceSynced(ids: string[]): void {
   const placeholders = ids.map(() => '?').join(',');
   db.runSync(`UPDATE attendance SET synced = 1 WHERE id IN (${placeholders})`, ...ids);
 }
+
+export function countSynced(): number {
+  const r = getDb().getFirstSync<{ c: number }>(
+    'SELECT COUNT(*) AS c FROM attendance WHERE synced = 1',
+  );
+  return r?.c ?? 0;
+}
+
+// Purge mechanism — only ever deletes records that are already safely in the
+// cloud (synced = 1), keeping on-device storage bounded for long-running remote
+// deployments. `olderThanMs = 0` purges all synced records (manual action).
+export function purgeSynced(olderThanMs = 0): number {
+  const cutoff = olderThanMs > 0 ? Date.now() - olderThanMs : Date.now() + 1;
+  const r = getDb().runSync('DELETE FROM attendance WHERE synced = 1 AND timestamp < ?', cutoff);
+  return r.changes ?? 0;
+}

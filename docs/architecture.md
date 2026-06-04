@@ -103,6 +103,12 @@ blendshapes (`eyeBlink`, `jawOpen`, `mouthSmile`).
 This survives flaky links and duplicate sends without ever creating duplicate
 attendance records.
 
+**Purge (sustainability).** Records confirmed in the cloud (`synced = 1`) are
+**auto-purged after a 30-day retention window** (and on demand via Config →
+Purge), so a device left unattended at a remote site for months keeps its local
+storage bounded instead of growing without limit. Purge only ever removes rows
+that are already safely server-side (`purgeSynced` in `src/db/attendance.ts`).
+
 ## 6. Performance (< 1 second)
 
 Measured per-stage on a laptop CPU (`poc/benchmark.py`, LFW):
