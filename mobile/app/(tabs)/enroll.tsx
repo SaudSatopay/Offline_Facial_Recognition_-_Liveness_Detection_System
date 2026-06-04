@@ -9,8 +9,9 @@ import { Screen, Field, Heading, Body, Mono, Label, Tag, Corners, GradientButton
 import { colors, gradients } from '../../src/theme/colors';
 import { font } from '../../src/theme/type';
 import { useFacePipeline } from '../../src/camera/useFacePipeline';
-import { l2normalize } from '../../src/ml/match';
-import { enrollUser } from '../../src/db/users';
+import { l2normalize, identify } from '../../src/ml/match';
+import { enrollUser, getUserByName, getGallery } from '../../src/db/users';
+import { DUP_THRESHOLD } from '../../src/ml/constants';
 import type { FaceSignals } from '../../src/liveness/challenge';
 
 const RET = 250;
@@ -39,7 +40,25 @@ export default function Enrol() {
     if (!capturingRef.current) return;
     capturingRef.current = false; setCapturing(false);
     if (timer.current) clearTimeout(timer.current);
-    const user = enrollUser(nameRef.current, l2normalize(emb));
+    const name = nameRef.current.trim();
+    const template = l2normalize(emb);
+
+    // Duplicate-registration guard — an already-enrolled person must not be able
+    // to register again, by name OR by face.
+    const byName = getUserByName(name);
+    if (byName) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      Alert.alert('Already registered', `The name "${byName.name}" is already in the on-device gallery. Use a different name, or remove the existing entry first.`);
+      return;
+    }
+    const dup = identify(template, getGallery(), DUP_THRESHOLD);
+    if (dup.accepted && dup.name) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      Alert.alert('Already registered', `This face matches "${dup.name}" (${Math.round(dup.score * 100)}% similar), who is already enrolled. Each person can only be registered once.`);
+      return;
+    }
+
+    const user = enrollUser(name, template);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Alert.alert('Enrolled ✓', `${user.name} added to the on-device gallery.`, [
       { text: 'Done' }, { text: 'View people', onPress: () => router.push('/people') },

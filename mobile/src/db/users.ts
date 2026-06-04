@@ -25,6 +25,15 @@ export function countUsers(): number {
   return r?.c ?? 0;
 }
 
+// Lookup by name (trimmed, case-insensitive) — used to block duplicate enrolment.
+export function getUserByName(name: string): User | null {
+  const r = getDb().getFirstSync<User>(
+    'SELECT id, name, created_at, synced FROM users WHERE lower(name) = lower(?)',
+    name.trim(),
+  );
+  return r ?? null;
+}
+
 // The face gallery used for 1:N identification.
 export function getGallery(): GalleryEntry[] {
   const rows = getDb().getAllSync<{ id: string; name: string; embedding: string }>(

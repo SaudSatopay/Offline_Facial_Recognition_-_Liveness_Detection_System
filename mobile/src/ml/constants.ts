@@ -7,3 +7,9 @@ export const MODEL_SIZE_MB = 4.99;
 // use a slightly higher, security-leaning default (a rejected genuine user can
 // retry). Tunable in Settings.
 export const DEFAULT_THRESHOLD = 0.45;
+
+// Stricter threshold for blocking duplicate enrolment of the same face. Set
+// above the recognition threshold so two different (but similar-looking) people
+// are not falsely flagged as the same person at enrol time — we only block when
+// the new face is clearly the same person already in the gallery.
+export const DUP_THRESHOLD = 0.5;
