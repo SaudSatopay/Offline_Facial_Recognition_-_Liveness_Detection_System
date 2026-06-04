@@ -88,10 +88,12 @@ def embed_image(img_float, detector: FaceMeshDetector, embedder: FaceEmbedder, t
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pairs", type=int, default=500, help="number of LFW pairs to evaluate")
+    ap.add_argument("--model", default=MODEL_PATH, help="path to the .tflite model to benchmark")
+    ap.add_argument("--tag", default="", help="suffix for output files, e.g. _int8 (keeps the float baseline intact)")
     args = ap.parse_args()
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    embedder = FaceEmbedder(MODEL_PATH)
+    embedder = FaceEmbedder(args.model)
     detector = FaceMeshDetector(static_image_mode=True)
     print(f"[model] {embedder}")
 
@@ -135,7 +137,7 @@ def main():
         "pairs_evaluated": int(len(pairs)),
         "model": {
             "name": "MobileFaceNet (ArcFace)",
-            "input": "112x112x3 float32",
+            "input": f"{embedder.in_w}x{embedder.in_h}x3 {embedder.in_dtype.__name__}",
             "embedding_dim": embedder.out_dim,
             "size_mb": round(embedder.size_mb, 2),
             "runtime": "TFLite / LiteRT (CPU on this machine; NNAPI/GPU on device)",
@@ -156,7 +158,7 @@ def main():
         "wall_seconds": round(wall, 1),
     }
 
-    with open(os.path.join(OUT_DIR, "metrics.json"), "w") as f:
+    with open(os.path.join(OUT_DIR, f"metrics{args.tag}.json"), "w") as f:
         json.dump(metrics, f, indent=2)
 
     # ---- plots ----
@@ -165,7 +167,7 @@ def main():
     plt.plot([0, 1], [0, 1], "k--", alpha=0.4)
     plt.xlabel("False Positive Rate"); plt.ylabel("True Positive Rate")
     plt.title("MobileFaceNet — LFW ROC"); plt.legend(loc="lower right"); plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, "roc_curve.png"), dpi=130)
+    plt.savefig(os.path.join(OUT_DIR, f"roc_curve{args.tag}.png"), dpi=130)
 
     plt.figure(figsize=(5, 4))
     plt.hist(scores[labels == 1], bins=30, alpha=0.6, label="same person")
@@ -173,7 +175,7 @@ def main():
     plt.axvline(best_thr, color="k", ls="--", label=f"threshold {best_thr:.2f}")
     plt.xlabel("cosine similarity"); plt.ylabel("pairs")
     plt.title("Genuine vs impostor score distribution"); plt.legend(); plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, "score_distribution.png"), dpi=130)
+    plt.savefig(os.path.join(OUT_DIR, f"score_distribution{args.tag}.png"), dpi=130)
 
     print("\n=== RESULTS ===")
     print(json.dumps(metrics, indent=2))

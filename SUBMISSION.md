@@ -10,7 +10,7 @@
 
 ### 1 · Innovation Level — *edge-AI efficiency, compression < 20 MB, offline liveness* (30)
 - **Model:** MobileFaceNet (ArcFace loss), **4.99 MB** TFLite — a ~4× margin under the 20 MB budget. 112×112 → 192-d embedding. Runs entirely **on-device** through a VisionCamera frame-processor worklet with the NNAPI/GPU TFLite delegate.
-- **Compression / efficiency:** lightweight depthwise-separable MobileFaceNet (vs ~90 MB+ for FaceNet/ArcFace-R50); cosine match over a brute-force gallery (sub-ms, no vector DB). Whole recognition path = **13 ms measured**.
+- **Compression / efficiency:** lightweight depthwise-separable MobileFaceNet (vs ~90 MB+ for FaceNet/ArcFace-R50); cosine match over a brute-force gallery (sub-ms, no vector DB). Whole recognition path = **13 ms measured**. **Int8 post-training quantization** of the same weights compresses the model to **1.76 MB** (2.85×, ~11× under budget) for just **−0.5 pp** accuracy (97.8% LFW, AUC 0.99) — measured, see [`docs/benchmarks/quantization.md`](docs/benchmarks/quantization.md).
 - **Offline liveness:** *active* challenge–response — a **randomly chosen** blink / smile / head-turn driven by MLKit eye-open, smile and yaw signals (`mobile/src/liveness/challenge.ts`). A printed photo or screen can't comply, and a pre-recorded video can't match the *random* prompt. **99.85% face-detection rate**; recognition runs only **after** liveness passes.
 
 ### 2 · Feasibility — *integration into Datalake 3.0 RN, < 1 s on mid-range* (30)

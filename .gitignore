@@ -22,6 +22,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
+.venv-quant/
 venv/
 env/
 .pytest_cache/
@@ -33,6 +34,9 @@ poc/.cache/
 poc/gallery.json
 *.zip
 *.tgz
+
+# ---------- Generated models (reproducible from quantize_onnx.py) ----------
+poc/models/*.onnx
 
 # ---------- Databases / runtime ----------
 *.sqlite

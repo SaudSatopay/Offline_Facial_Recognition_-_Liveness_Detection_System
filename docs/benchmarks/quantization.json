@@ -1,0 +1,28 @@
+{
+  "note": "int8 = onnxruntime static QDQ quantization (per-channel int8 weights, uint8 activations, calibrated on real face crops) of the shipped MobileFaceNet weights, converted via tf2onnx. Same aligned LFW crops score both models; float32 I/O.",
+  "pairs_evaluated": 1000,
+  "operating_threshold": 0.45,
+  "size_mb": {
+    "tflite_float_shipped": 4.99,
+    "onnx_float": 5.01,
+    "onnx_int8": 1.76,
+    "compression_x": 2.85
+  },
+  "accuracy_float_onnx": {
+    "acc_operating": 0.983,
+    "acc_best": 0.987,
+    "best_threshold": 0.3997,
+    "roc_auc": 0.9916
+  },
+  "accuracy_int8_onnx": {
+    "acc_operating": 0.978,
+    "acc_best": 0.985,
+    "best_threshold": 0.4175,
+    "roc_auc": 0.9928
+  },
+  "accuracy_delta_pp": {
+    "acc_operating": -0.5,
+    "acc_best": -0.2,
+    "roc_auc": 0.12
+  }
+}

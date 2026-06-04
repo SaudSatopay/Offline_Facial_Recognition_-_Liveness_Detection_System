@@ -1,0 +1,15 @@
+# Toolchain for the int8 quantization demo (poc/quantize_onnx.py).
+# Install in a SEPARATE venv so the main inference venv (requirements.txt) stays
+# pristine and keeps producing the verified benchmark numbers:
+#
+#   py -3.10 -m venv .venv-quant
+#   .venv-quant\Scripts\python -m pip install -r requirements-quant.txt
+#
+# tf2onnx converts the legacy .tflite to ONNX; onnxruntime does the static
+# QDQ int8 quantization + scoring. (tensorflow is a tf2onnx dependency.)
+tensorflow==2.21.0
+tf2onnx==1.17.0
+onnx==1.21.0
+onnxruntime==1.23.2
+scikit-learn
+numpy

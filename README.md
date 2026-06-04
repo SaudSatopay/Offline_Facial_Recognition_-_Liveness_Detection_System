@@ -77,6 +77,8 @@ Reproduce: `cd poc && python benchmark.py --pairs 1000`.
 
 > **Model size vs app size:** the *AI model* is **4.99 MB** — the "lightweight (~20 MB)" target, beaten ~4×. The Android **APK is ~37 MB**: the whole app bundle (RN runtime + MLKit + TFLite native libraries for arm64 + the model).
 
+> **Int8 compression (POC):** post-training int8 quantization of the same weights yields a **1.76 MB** model (2.85× smaller, ~11× under budget) at **97.8%** LFW (−0.5 pp, AUC 0.99) — [`docs/benchmarks/quantization.md`](docs/benchmarks/quantization.md). The verified float model remains the shipping artifact.
+
 ### Robustness across capture conditions
 
 Remote sites mean bad light, cheap cameras and off-axis glances, so we stress-test the recogniser by degrading the **live probe** (clean enrolled template vs. degraded scan) across 11 realistic conditions — glare, low / very-low light, low contrast, motion blur, downscaling, sensor noise, JPEG compression, and ±12° pose tilt. Accuracy stays **≥ 96.7%** (≥ 98.6% of clean) and **ROC-AUC ≥ 0.987** on every one.
