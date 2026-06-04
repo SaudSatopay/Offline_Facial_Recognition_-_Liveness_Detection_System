@@ -17,7 +17,7 @@ const GRAIN = require('../../assets/textures/grain.png');
 // ---------------------------------------------------------------- layout
 export function Grain({ opacity = 0.05 }: { opacity?: number }) {
   return (
-    <View style={[StyleSheet.absoluteFillObject, { opacity, pointerEvents: 'none' }]}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, { opacity }]}>
       <Image source={GRAIN} resizeMode="repeat" style={StyleSheet.absoluteFillObject} />
     </View>
   );
