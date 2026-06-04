@@ -2,7 +2,7 @@
 
 **Project:** Secure Offline Facial Recognition & Liveness Detection System for Remote Locations
 **Repo:** https://github.com/SaudSatopay/Offline_Facial_Recognition_-_Liveness_Detection_System
-**Status:** ✅ Built and **running on a real device** (Samsung Galaxy S24 Ultra) — enrolment, blink/smile/head-turn liveness, on-device recognition, and offline→cloud sync all verified live.
+**Status:** ✅ Built and **running on a real device** (Samsung Galaxy S24 Ultra) — enrolment, blink/smile/head-turn liveness, the on-device recognition pipeline, and offline→cloud sync all run live. Recognition **accuracy** is benchmarked rigorously in the POC (**98.3% LFW**); on-device recognition is a functional 2D prototype — honest limits + concrete upgrade path in [`docs/benchmarks/ondevice-recognition.md`](docs/benchmarks/ondevice-recognition.md).
 
 ---
 

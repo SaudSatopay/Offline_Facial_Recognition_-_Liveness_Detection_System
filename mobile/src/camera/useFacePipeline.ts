@@ -28,7 +28,7 @@ export function useFacePipeline(
   const { detectFaces } = useFaceDetector({
     performanceMode: 'fast',
     classificationMode: 'all', // -> eye-open + smiling probabilities
-    landmarkMode: 'none',
+    landmarkMode: 'all',       // -> eye positions, for ArcFace-style alignment
     contourMode: 'none',
     minFaceSize: 0.15,
   });
@@ -51,19 +51,39 @@ export function useFacePipeline(
 
       if (!wantEmbedding.value || model == null) return;
 
-      // crop to the face (with a small margin), clamped to the frame
+      // Align the crop to the eyes. MobileFaceNet (ArcFace) is alignment-sensitive,
+      // so a loose bounding-box crop makes the embedding encode framing more than
+      // identity. We scale + center on the inter-ocular line toward the ArcFace
+      // canonical layout so identity drives the embedding. (A full rotational warp
+      // was tried but jittered on noisy fast-mode landmarks; this is the stable
+      // version — see docs/benchmarks/ondevice-recognition.md.)
       const fw = frame.width;
       const fh = frame.height;
-      const mx = f.bounds.width * 0.12;
-      const my = f.bounds.height * 0.12;
-      let x = f.bounds.x - mx;
-      let y = f.bounds.y - my;
-      let w = f.bounds.width + mx * 2;
-      let h = f.bounds.height + my * 2;
+      const lm = f.landmarks;
+      let x: number, y: number, w: number, h: number;
+      if (lm != null && lm.LEFT_EYE != null && lm.RIGHT_EYE != null) {
+        const ex = (lm.LEFT_EYE.x + lm.RIGHT_EYE.x) / 2;
+        const ey = (lm.LEFT_EYE.y + lm.RIGHT_EYE.y) / 2;
+        const iod = Math.sqrt(
+          (lm.RIGHT_EYE.x - lm.LEFT_EYE.x) ** 2 + (lm.RIGHT_EYE.y - lm.LEFT_EYE.y) ** 2,
+        ) || 1;
+        const side = iod * 3.178;   // canonical inter-ocular distance is ~35.2px in 112
+        x = ex - 0.499 * side;      // canonical eye-center sits at (0.499, 0.461) of the crop
+        y = ey - 0.461 * side;
+        w = side; h = side;
+      } else {
+        const mx = f.bounds.width * 0.12;
+        const my = f.bounds.height * 0.12;
+        x = f.bounds.x - mx; y = f.bounds.y - my;
+        w = f.bounds.width + mx * 2; h = f.bounds.height + my * 2;
+      }
+      // clamp into the frame, preserving the (square) crop size where possible
+      if (w > fw) w = fw;
+      if (h > fh) h = fh;
       if (x < 0) x = 0;
       if (y < 0) y = 0;
-      if (x + w > fw) w = fw - x;
-      if (y + h > fh) h = fh - y;
+      if (x + w > fw) x = fw - w;
+      if (y + h > fh) y = fh - h;
       if (w < 10 || h < 10) return;
 
       const resized = resize(frame, {
@@ -72,8 +92,11 @@ export function useFacePipeline(
         pixelFormat: 'rgb',
         dataType: 'float32',
       });
-      // MobileFaceNet expects normalized input in [-1, 1]
-      for (let i = 0; i < resized.length; i++) resized[i] = (resized[i] - 127.5) / 128;
+      // MobileFaceNet expects [-1, 1]. The resize plugin returns float32 in [0, 1]
+      // (NOT [0, 255]), so rescale before the (x-127.5)/128 normalization — matching
+      // the POC. (Without the *255 every pixel collapsed to ~-0.99, a flat image, so
+      // all faces produced a near-identical embedding.)
+      for (let i = 0; i < resized.length; i++) resized[i] = (resized[i] * 255 - 127.5) / 128;
 
       const outputs = model.runSync([resized]);
       const out = outputs[0];

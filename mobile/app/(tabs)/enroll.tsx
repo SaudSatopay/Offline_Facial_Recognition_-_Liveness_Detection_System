@@ -9,9 +9,9 @@ import { Screen, Field, Heading, Body, Mono, Label, Tag, Corners, GradientButton
 import { colors, gradients } from '../../src/theme/colors';
 import { font } from '../../src/theme/type';
 import { useFacePipeline } from '../../src/camera/useFacePipeline';
-import { l2normalize, identify } from '../../src/ml/match';
+import { l2normalize, identify, averageEmbedding } from '../../src/ml/match';
 import { enrollUser, getUserByName, getGallery } from '../../src/db/users';
-import { DUP_THRESHOLD } from '../../src/ml/constants';
+import { DUP_THRESHOLD, ENROLL_FRAMES } from '../../src/ml/constants';
 import type { FaceSignals } from '../../src/liveness/challenge';
 
 const RET = 250;
@@ -24,8 +24,11 @@ export default function Enrol() {
   const [name, setName] = useState('');
   const [face, setFace] = useState<FaceSignals>({ hasFace: false, eyeOpen: 1, smile: 0, yaw: 0 });
   const [capturing, setCapturing] = useState(false);
+  const [progress, setProgress] = useState(0);
   const nameRef = useRef('');
   const capturingRef = useRef(false);
+  const framesRef = useRef<number[][]>([]);
+  const requestEmbeddingRef = useRef<() => void>();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { nameRef.current = name; }, [name]);
@@ -36,12 +39,28 @@ export default function Enrol() {
   }, []));
 
   const onFace = useCallback((sig: FaceSignals) => setFace(sig), []);
+  const finalizeEnroll = useCallback((name: string, template: number[]) => {
+    const user = enrollUser(name, template);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Alert.alert('Enrolled ✓', `${user.name} added to the on-device gallery.`, [
+      { text: 'Done' }, { text: 'View people', onPress: () => router.push('/people') },
+    ]);
+    setName('');
+  }, [router]);
   const onEmbedding = useCallback((emb: number[]) => {
     if (!capturingRef.current) return;
-    capturingRef.current = false; setCapturing(false);
+    framesRef.current.push(l2normalize(emb));
+    setProgress(framesRef.current.length);
+    if (framesRef.current.length < ENROLL_FRAMES) {
+      requestEmbeddingRef.current?.(); // collect the next frame
+      return;
+    }
+    // collected enough frames — average them into one sturdy template
+    capturingRef.current = false; setCapturing(false); setProgress(0);
     if (timer.current) clearTimeout(timer.current);
     const name = nameRef.current.trim();
-    const template = l2normalize(emb);
+    const template = averageEmbedding(framesRef.current);
+    framesRef.current = [];
 
     // Duplicate-registration guard — an already-enrolled person must not be able
     // to register again, by name OR by face.
@@ -53,27 +72,38 @@ export default function Enrol() {
     }
     const dup = identify(template, getGallery(), DUP_THRESHOLD);
     if (dup.accepted && dup.name) {
+      // Soft guard: a similar-looking face may still be a different person (e.g. a
+      // relative), so warn and let the operator confirm instead of hard-blocking.
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      Alert.alert('Already registered', `This face matches "${dup.name}" (${Math.round(dup.score * 100)}% similar), who is already enrolled. Each person can only be registered once.`);
+      Alert.alert(
+        'Possible duplicate',
+        `This face looks similar to "${dup.name}" (${Math.round(dup.score * 100)}% match). If it's the same person, cancel. If it's a different person (e.g. a relative), enrol them anyway.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Enrol anyway', onPress: () => finalizeEnroll(name, template) },
+        ],
+      );
       return;
     }
-
-    const user = enrollUser(name, template);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert('Enrolled ✓', `${user.name} added to the on-device gallery.`, [
-      { text: 'Done' }, { text: 'View people', onPress: () => router.push('/people') },
-    ]);
-    setName('');
-  }, [router]);
+    finalizeEnroll(name, template);
+  }, [finalizeEnroll]);
 
   const { frameProcessor, modelReady, requestEmbedding } = useFacePipeline(onFace, onEmbedding);
+  useEffect(() => { requestEmbeddingRef.current = requestEmbedding; }, [requestEmbedding]);
 
   const capture = () => {
     if (!name.trim()) return Alert.alert('Name required', 'Enter a name before enrolling.');
     if (!face.hasFace) return Alert.alert('No face', 'Center the face inside the brackets.');
+    if (Math.abs(face.yaw) > 18) return Alert.alert('Look straight ahead', 'Face the camera directly while enrolling.');
+    if (face.eyeOpen < 0.4) return Alert.alert('Open your eyes', 'Keep your eyes open while enrolling.');
     if (!modelReady) return Alert.alert('Loading', 'Model still loading — try again.');
-    capturingRef.current = true; setCapturing(true); requestEmbedding();
-    timer.current = setTimeout(() => { capturingRef.current = false; setCapturing(false); Alert.alert('Try again', 'Could not capture a clear face. Hold still and retry.'); }, 4000);
+    framesRef.current = []; setProgress(0);
+    capturingRef.current = true; setCapturing(true);
+    requestEmbedding();
+    timer.current = setTimeout(() => {
+      capturingRef.current = false; setCapturing(false); setProgress(0); framesRef.current = [];
+      Alert.alert('Try again', 'Could not capture clear frames — hold still, face the camera, and retry.');
+    }, 6000);
   };
 
   if (!hasPermission) return (
@@ -108,7 +138,7 @@ export default function Enrol() {
             value={name} onChangeText={setName} placeholder="Full name"
             placeholderTextColor={colors.textFaint} style={st.input}
           />
-          <GradientButton title={capturing ? 'HOLD STILL…' : 'CAPTURE & ENROL'} loading={capturing} disabled={!modelReady} onPress={capture} icon={!capturing ? <Ionicons name="camera" size={18} color={colors.black} /> : undefined} />
+          <GradientButton title={capturing ? `HOLD STILL… ${progress}/${ENROLL_FRAMES}` : 'CAPTURE & ENROL'} loading={capturing} disabled={!modelReady} onPress={capture} icon={!capturing ? <Ionicons name="camera" size={18} color={colors.black} /> : undefined} />
           <Mono size={11} color={colors.textFaint}>// good light + a frontal pose = best template</Mono>
         </Field>
       </View>

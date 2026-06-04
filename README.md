@@ -128,7 +128,7 @@ docs/     architecture · integration · demo script · benchmarks (metrics + pl
 
 ## Validation status
 
-- ✅ **Running on a real device** — confirmed end-to-end on a **Samsung Galaxy S24 Ultra**: enrolment, **blink / smile / head-turn liveness**, on-device recognition (with a live millisecond latency badge), and offline→cloud sync all work. Install the prebuilt APK or build via the [runbook](mobile/README.md).
+- ✅ **Running on a real device** — confirmed end-to-end on a **Samsung Galaxy S24 Ultra**: enrolment, **blink / smile / head-turn liveness**, the on-device recognition pipeline (with a live millisecond latency badge), and offline→cloud sync all run. Recognition **accuracy** is benchmarked in the POC (**98.3% LFW**); on-device recognition is a functional 2D prototype — see [`docs/benchmarks/ondevice-recognition.md`](docs/benchmarks/ondevice-recognition.md). Install the prebuilt APK or build via the [runbook](mobile/README.md).
 - ✅ **POC** — runs and is benchmarked end-to-end (the numbers above are from this machine).
 - ✅ **Server** — verified end-to-end (health, auth, idempotent sync, dashboard).
 - ✅ **Mobile** — `tsc` clean · `expo-doctor` 18/18 · ships an **arm64 release APK (~37 MB)** — the AI model inside it is **4.99 MB**.

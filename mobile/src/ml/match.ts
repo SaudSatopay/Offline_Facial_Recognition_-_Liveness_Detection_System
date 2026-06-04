@@ -19,6 +19,16 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   return dot;
 }
 
+// Average several L2-normalized embeddings into one robust template (re-normalized).
+// Used for multi-frame enrolment — a single frame is fragile.
+export function averageEmbedding(embeddings: number[][]): number[] {
+  const dim = embeddings[0].length;
+  const sum = new Array(dim).fill(0);
+  for (const e of embeddings) for (let i = 0; i < dim; i++) sum[i] += e[i];
+  for (let i = 0; i < dim; i++) sum[i] /= embeddings.length;
+  return l2normalize(sum);
+}
+
 export type Identification = {
   id: string | null;
   name: string | null;
