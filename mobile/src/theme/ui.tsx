@@ -103,14 +103,16 @@ export function Pulse({ color = colors.green, size = 8 }: { color?: string; size
   );
 }
 
-// staggered entrance: fade + rise on mount
+// staggered entrance: a subtle rise on mount. Opacity is pinned to 1 so content
+// is ALWAYS visible even if the animation never runs (release/native-driver
+// edge cases) — we only animate the translateY slide.
 export function Stagger({ children, index = 0, style }: { children: React.ReactNode; index?: number; style?: ViewStyle }) {
   const a = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.timing(a, { toValue: 1, duration: 420, delay: 60 + index * 70, useNativeDriver: true, easing: Easing.out(Easing.cubic) }).start();
+    Animated.timing(a, { toValue: 1, duration: 360, delay: index * 55, useNativeDriver: true, easing: Easing.out(Easing.cubic) }).start();
   }, [a, index]);
   return (
-    <Animated.View style={[{ opacity: a, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }, style]}>
+    <Animated.View style={[{ opacity: 1, transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }, style]}>
       {children}
     </Animated.View>
   );
