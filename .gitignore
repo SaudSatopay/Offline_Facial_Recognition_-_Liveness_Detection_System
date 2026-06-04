@@ -52,3 +52,5 @@ Thumbs.db
 .vscode/
 .claude/
 *.log
+HANDOFF.md
+*.apk
