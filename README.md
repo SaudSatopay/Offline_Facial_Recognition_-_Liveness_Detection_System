@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="mobile/assets/icon.png" width="104" alt="FaceAttend icon" />
+
 # 🛡️ Offline Facial Recognition & Liveness Detection System
 
 ### Secure, on-device face authentication for remote zero-network locations

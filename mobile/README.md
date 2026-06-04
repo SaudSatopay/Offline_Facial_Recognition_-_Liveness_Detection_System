@@ -63,14 +63,19 @@ npm i -g eas-cli && eas login
 eas build -p android --profile preview      # returns a downloadable APK to sideload
 ```
 
-## Using the app
+## Using the app (5 tabs)
 
-1. **Enroll** — type a name, center your face, *Capture & Enroll* (stored locally).
-2. **Attend** — *Start verification* → complete the random liveness challenge →
+1. **Enrol** — type a name, align your face in the brackets, *Capture & Enrol* (stored locally).
+2. **Scan** — *Start verification* → complete the random liveness challenge →
    you're recognized on-device and attendance is marked, with the latency shown.
    Try holding up a printed photo: it can't blink/smile/turn, so it's rejected.
-3. **Records** — the local attendance log (with per-row sync status).
-4. **Settings** — server URL/key, recognition threshold, connection test, sync, model info.
+3. **Log** — the local attendance log (with per-row sync status).
+4. **Status** — dashboard: stats, recent activity, sync, and **Manage enrolled** (delete people).
+5. **Config** — server URL/key, recognition threshold, connection test, sync, model info.
+
+The UI is a deliberate **"field terminal"** design — warm charcoal, hi-vis amber
+signal accent, Archivo + Space Mono type, targeting-reticle viewfinders, and a
+scanning-line animation — themed for highway field-security use.
 
 ### Prove it's truly offline
 Enable airplane mode, mark attendance (still works), then re-enable the network —
@@ -80,11 +85,13 @@ the queued records auto-sync and appear on the server dashboard at `http://local
 
 ```
 app/                      expo-router screens
-  (tabs)/ index | attendance | enroll | records | settings
+  (tabs)/ index(Status) | attendance(Scan) | enroll(Enrol) | records(Log) | settings(Config)
+  people.tsx              enrolled-people management (delete)
 src/
   camera/useFacePipeline  VisionCamera frame processor (detect → resize → embed)
   liveness/challenge      blink/smile/turn state machine
   ml/ match | constants   L2-normalize, cosine identify, threshold
+  theme/ colors|type|ui   "field terminal" design system + components
   db/ database|users|attendance   expo-sqlite schema + DAOs
   sync/ client | useSync  REST client + NetInfo-driven flushing
   theme/ colors | ui      dark UI kit (matches the server dashboard)
