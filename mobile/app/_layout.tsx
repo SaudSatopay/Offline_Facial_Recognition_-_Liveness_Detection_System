@@ -25,11 +25,11 @@ export default function RootLayout() {
     Archivo_400Regular, Archivo_500Medium, Archivo_600SemiBold,
     Archivo_700Bold, Archivo_800ExtraBold, Archivo_900Black,
     SpaceMono_400Regular, SpaceMono_700Bold,
-    // Load the Ionicons glyph font directly (same mechanism that works for the
-    // Google fonts). @expo/vector-icons' own auto-load doesn't fire reliably in
-    // this release build, so tab-bar + in-screen icons were blank.
-    Ionicons: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
   });
+  // NOTE: the Ionicons glyph font is shipped natively in
+  // android/app/src/main/assets/fonts/Ionicons.ttf (and assets/fonts for
+  // prebuild via the expo-font plugin) so Android resolves fontFamily
+  // "Ionicons" at the OS level — runtime loading of it was unreliable here.
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
